@@ -16,10 +16,12 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+      - name: Install libsodium
+        run: sudo apt-get update && sudo apt-get install -y libsodium-dev
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install flake8 pytest pytest-cov codecov
+          pip install flake8 pytest pytest-cov
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
       - name: Lint with flake8
         run: |
@@ -30,6 +32,3 @@ jobs:
       - name: Test with pytest
         run: |
           pytest --cov=./
-      - name: Upload coverage
-        run: |
-          codecov
