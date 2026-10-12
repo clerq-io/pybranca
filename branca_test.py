@@ -316,15 +316,49 @@ def test_should_allow_hex_string_key():
     assert branca.timestamp(token) == 123206400
 
 @pytest.mark.parametrize("size", [0, 1, 31, 64, 255, 1024, 2048])
-def test_should_match_pybase62_encoding(size):
+def test_should_be_compatible_with_pybase62_tokens(size):
     base62 = pytest.importorskip("base62")
-    branca = Branca(key="73757065727365637265746b6579796f7573686f756c646e6f74636f6d6d6974")
+    key = unhexlify("73757065727365637265746b6579796f7573686f756c646e6f74636f6d6d6974")
+    branca = Branca(key)
+    nonce = xchacha20poly1305.generate_nonce()
+    header = struct.pack(">BL", Branca.VERSION, 123206400) + nonce
     payload = os.urandom(size)
+    ciphertext = xchacha20poly1305.crypto_aead_xchacha20poly1305_ietf_encrypt(payload, header, nonce, key)
+    pybase62_token = base62.encodebytes(header + ciphertext)
 
-    token = branca.encode(payload)
+    assert branca.decode(pybase62_token) == payload
+    assert branca.timestamp(pybase62_token) == 123206400
 
-    assert base62.encodebytes(base62.decodebytes(token)) == token
+    branca._nonce = nonce
+    assert branca.encode(payload, timestamp=123206400) == pybase62_token
+
+def test_should_be_compatible_with_v0_5_1_token():
+    key = unhexlify("73757065727365637265746b6579796f7573686f756c646e6f74636f6d6d6974")
+    branca = Branca(key)
+    payload = bytes(range(256)) * 4
+    token = (
+        "2U5t2GpPY1Np2dnRG4FtwS2czXEGiJuQl7R6XcInD9RyAbI7NG2eJKj5EJsf3hOCqiUYfpZECCRFwfd2tv0V0sagxUa7WkBeiWKQ"
+        "DnYx09xIOkhEQFl8alrvQOiiZcI1Y0PIuhc94jMspSLz4rmcC2hKrTkqQs4fiuiQQVHEZYG96kHaiG29u671hnYsYrLapwvd41GZ"
+        "99LBcVcPl9uO5N7AoPj3DaSksUhH52ivJWsDKEMsdbc5qYM07a26mCkoIBBqnOeNk90uZRCTl4q4ZQPjvrB3u7BdajRBJck9ivl0"
+        "sesU493DlO6SIRHbP7nTDzlTvxHUxevfGY8oONNzlqnb9ZRp4AqF8YSbwy0va5vOGrbIB5F6z46erPkcLx27capqrWT19MwG7dJd"
+        "hxJVyHmK4ZHbiWU3mKG5acq2A096IuYGZOyq685rQS3bratZjxIx6WvQAe5UrIjCTeuSsIQxyRuYa6DGOgRaXIoHP8uLWB9R7Yb3"
+        "tJwDnehHadiGb1dcZ8mFyUTaY4x21iXxYzy9fSD07NeYOOqjSg81MKbqOCoMCBiq4x51X8UVkWA8yZY1s4sMLhviDGnzChPMvYHf"
+        "5zk5mhTOzGdp6owoXfOX72wnWqubju22h2ouYIfe6a0q1vSiK7q5rX8onBMLrPHyQbNzLAgsqxXZb4Uf8ze69FQjlHAMhxGNSaXy"
+        "MaNpvqplkv9U2wDZ8pfsb6B0gqlZ6KDsEENZ9cvgmw7ore3OnZhcxuLYwWEqhfK5CImFkLA6GnHoH9rKYHTRMCHfj9whVSnx0n4E"
+        "HERBKG5P5P7LbsgNOxbPKJHSrEGWLCeNWW18rH7XeL107Vqc7MIqBqxUcRYZAfRAKkkC89UBTRBJAL57F2mFyKYyDzUghzzoqmEs"
+        "glz3z0Kn2BZ36drRewJ7idGRLgttSo9EZRcdggBj9WZho7yT8cJpKHiDI2VgPgom5ztUMx3Gc8Pk681XiXK5HcB1laRLZlZmeTl1"
+        "Mic2V2EMh9mOZbDPDTDy6dghB2qPKjX1xjGcctVZR56pd1KAKO7yIVRWSoXFUsXfbD1Db6RMsOU7P7Ovu3mlE7wT3VQUfND6AKPc"
+        "bn4zLvyG4QTAVtk4hT5PQDJhYdtWSYQNRN362Wcj2zgsz6jaeUbkTj9BluVe4TRMcxeDRMDo6F1LLsoNWh4lQpsYAI2sy0RJoSaU"
+        "eq16pG6CJhguPurWGjMes1ryzh658QpazoPnBA6PeGivYW9pCdQyRTC0FiR3PWuN4fUSJGqsS7IJ6ZIf32SzIAdPgJXVhilWm7Cl"
+        "LAbxrwdepJn80e7Sl7gdqjv8FCkJ7P25J5ryanzkYR23zNbLU2r7SGyODFS8Gy83VM39H6q2tK98WC7QikVfVIpnFW39hARD9rUW"
+        "RhY3x2pN323zvogK239qozyM0sDmqUbPbvtjr"
+    )
+
     assert branca.decode(token) == payload
+    assert branca.timestamp(token) == 123206400
+
+    branca._nonce = unhexlify("beefbeefbeefbeefbeefbeefbeefbeefbeefbeefbeefbeef")
+    assert branca.encode(payload, timestamp=123206400) == token
 
 def test_should_round_trip_large_payload():
     branca = Branca(key="73757065727365637265746b6579796f7573686f756c646e6f74636f6d6d6974")
