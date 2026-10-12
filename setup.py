@@ -22,6 +22,7 @@ setup(
     maintainer="Mika Tuupola",
     maintainer_email="tuupola@appelsiini.net",
     license="MIT",
+    python_requires=">=3.9",
     install_requires=[
         "gmpy2>=2.3"
     ],
