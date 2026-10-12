@@ -20,6 +20,7 @@
 
 from branca import Branca
 from binascii import unhexlify, hexlify
+import os
 import pytest
 import struct
 import sys
@@ -315,3 +316,35 @@ def test_should_allow_hex_string_key():
 
     assert branca.decode(token) == b"Hello world!"
     assert branca.timestamp(token) == 123206400
+
+@pytest.mark.parametrize("size", [0, 1, 31, 64, 255, 1024, 2048])
+def test_should_match_pybase62_encoding(size):
+    base62 = pytest.importorskip("base62")
+    branca = Branca(key="73757065727365637265746b6579796f7573686f756c646e6f74636f6d6d6974")
+    payload = os.urandom(size)
+
+    token = branca.encode(payload)
+
+    assert base62.encodebytes(base62.decodebytes(token)) == token
+    assert branca.decode(token) == payload
+
+def test_should_round_trip_large_payload():
+    branca = Branca(key="73757065727365637265746b6579796f7573686f756c646e6f74636f6d6d6974")
+    payload = os.urandom(1000000)
+
+    assert branca.decode(branca.encode(payload)) == payload
+
+@pytest.mark.parametrize("token", [
+    "",
+    "0875GH23U0Dr6nHFA63DhOyd9LkYudBkX8RsCTOMz5xoYAMw9sMd5QwcEqLDRnTDHPenOX7nP2trlT",
+    "875GH23U0Dr6nHFA63DhOyd9LkYudBkX8RsC TOMz5xoYAMw9sMd5QwcEqLDRnTDHPenOX7nP2trlT",
+    " 875GH23U0Dr6nHFA63DhOyd9LkYudBkX8RsCTOMz5xoYAMw9sMd5QwcEqLDRnTDHPenOX7nP2trlT",
+    "875GH23U0Dr6nHFA63DhOyd9LkYudBkX8RsCTOMz5xoYAMw9sMd5QwcEqLDRnTDHPenOX7nP2trlT\n",
+    "-875GH23U0Dr6nHFA63DhOyd9LkYudBkX8RsCTOMz5xoYAMw9sMd5QwcEqLDRnTDHPenOX7nP2trlT",
+])
+def test_should_throw_with_non_canonical_base62(token):
+    branca = Branca(key="73757065727365637265746b6579796f7573686f756c646e6f74636f6d6d6974")
+
+    with pytest.raises(ValueError):
+        branca.decode(token)
+
