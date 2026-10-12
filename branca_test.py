@@ -238,7 +238,7 @@ def test_encode_eight_nul_bytes_with_zero_timestamp():
     assert token == "1jIBheHbDdkCDFQmtgw4RUZeQoOJgGwTFJSpwOAk3XYpJJr52DEpILLmmwYl4tjdSbbNqcF1"
 
 # Test vector 4
-def test_encode_eight_nul_bytes_with_zero_timestamp():
+def test_encode_eight_nul_bytes_with_max_timestamp():
     key = unhexlify("73757065727365637265746b6579796f7573686f756c646e6f74636f6d6d6974")
     branca = Branca(key)
 
