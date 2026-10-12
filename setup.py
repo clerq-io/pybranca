@@ -23,7 +23,7 @@ setup(
     maintainer_email="tuupola@appelsiini.net",
     license="MIT",
     install_requires=[
-        "pybase62>=0.3"
+        "gmpy2>=2.3"
     ],
     classifiers=[
         "Development Status :: 4 - Beta",

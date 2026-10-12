@@ -24,12 +24,13 @@ Branca
 Authenticated and encrypted API tokens using modern crypto.
 """
 
-import base62
 import calendar
 import ctypes
+import re
 import struct
 from binascii import unhexlify
 from datetime import datetime
+import gmpy2
 from xchacha20poly1305 import generate_nonce
 from xchacha20poly1305 import crypto_aead_xchacha20poly1305_ietf_encrypt
 from xchacha20poly1305 import crypto_aead_xchacha20poly1305_ietf_decrypt
@@ -73,10 +74,10 @@ class Branca:
         header = version + time + nonce
         ciphertext = crypto_aead_xchacha20poly1305_ietf_encrypt(payload, header, nonce, self._key)
 
-        return base62.encodebytes(header + ciphertext)
+        return _base62_encode(header + ciphertext)
 
     def decode(self, token, ttl=None):
-        token = base62.decodebytes(token)
+        token = _base62_decode(token)
         header = token[0:CRYPTO_AEAD_XHCACHA20POLY1305_IETF_NPUBBYTES + 5]
         nonce = header[5:CRYPTO_AEAD_XHCACHA20POLY1305_IETF_NPUBBYTES + 5]
         ciphertext = token[CRYPTO_AEAD_XHCACHA20POLY1305_IETF_NPUBBYTES + 5:]
@@ -98,7 +99,21 @@ class Branca:
         return payload
 
     def timestamp(self, token):
-        token = base62.decodebytes(token)
+        token = _base62_decode(token)
         version, time = struct.unpack(">BL", bytes(token[0:5]))
 
         return time
+
+
+_BASE62_TOKEN = re.compile("[1-9A-Za-z][0-9A-Za-z]*")
+
+
+def _base62_encode(data):
+    return gmpy2.mpz(int.from_bytes(data, "big")).digits(62)
+
+
+def _base62_decode(token):
+    if not _BASE62_TOKEN.fullmatch(token):
+        raise ValueError("Invalid base62 token")
+    value = int(gmpy2.mpz(token, 62))
+    return value.to_bytes((value.bit_length() + 7) // 8, "big")

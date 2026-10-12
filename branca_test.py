@@ -20,7 +20,6 @@
 
 from branca import Branca
 from binascii import unhexlify, hexlify
-import base62
 import pytest
 import struct
 import sys
