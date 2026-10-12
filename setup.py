@@ -11,7 +11,7 @@ with open(path.join(cwd, "README.md"), encoding="utf-8") as f:
 setup(
     name="pybranca",
     py_modules=["branca", "xchacha20poly1305"],
-    version="0.5.1",
+    version="0.6.0",
     description="Authenticated and encrypted API tokens using modern crypto",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -22,8 +22,9 @@ setup(
     maintainer="Mika Tuupola",
     maintainer_email="tuupola@appelsiini.net",
     license="MIT",
+    python_requires=">=3.9",
     install_requires=[
-        "pybase62>=0.3"
+        "gmpy2>=2.3"
     ],
     classifiers=[
         "Development Status :: 4 - Beta",
