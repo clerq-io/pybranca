@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file, in reverse chronological order by release.
 
+## [0.6.1](https://github.com/clerq-io/pybranca/compare/v0.6.0...v0.6.1) - 2026-11-05
+
+### Changed
+- Declare the license as an SPDX expression instead of a classifier, so builds with setuptools 77+ no longer warn.
+
 ## [0.6.0](https://github.com/clerq-io/pybranca/compare/v0.5.1...v0.6.0) - 2026-10-12
 
 ### Changed
